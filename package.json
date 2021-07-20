@@ -1,0 +1,27 @@
+{
+  "name": "fractions",
+  "version": "1.0.0",
+  "description": "NFT fractionalisation framework on Tezos ",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint --ext=.js,.jsx,.ts,.tsx .",
+    "compile-contracts": "cd contracts && chmod +x compile.sh && ./compile.sh",
+    "deploy-contracts": "ts-node contracts/deploy.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@taquito/signer": "^9.2.0",
+    "@taquito/taquito": "^9.2.0",
+    "dotenv": "^10.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.28.4",
+    "@typescript-eslint/parser": "^4.28.4",
+    "eslint": "^7.31.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "prettier": "^2.3.2",
+    "ts-node": "^10.1.0"
+  }
+}
