@@ -1,2 +1,4 @@
 .env
 node_modules
+build/.tmp_contract_build
+contracts/__pycache__
