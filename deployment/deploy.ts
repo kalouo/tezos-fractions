@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import * as dotenv from 'dotenv';
-import { configureTezos } from './utils/tezos';
+import { configureTezos } from './provider';
 
 dotenv.config();
 

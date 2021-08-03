@@ -23,7 +23,7 @@ fi
 function processContract {
     CONTRACT_NAME=$1
     OUT_DIR=$2
-    CONTRACT_IN="${CONTRACT_NAME}.py"
+    CONTRACT_IN="../contracts/${CONTRACT_NAME}.py"
     CONTRACT_OUT="${CONTRACT_NAME}.json"
     CONTRACT_COMPILED="${CONTRACT_NAME}/step_000_cont_0_contract.json"
 
@@ -46,14 +46,22 @@ function processContract {
 }
 
 echo "> [1 / 2] Unit Testing and Compiling Contracts."
+#   for i in ${!CONTRACTS_ARRAY[@]}; do
+#       processContract ${CONTRACTS_ARRAY[$i]} $OUT_DIR
+#    done
+
 # Execute processContract on all files in CONTRACTS_ARRAY
-for i in ${!CONTRACTS_ARRAY[@]}; do
-    processContract ${CONTRACTS_ARRAY[$i]} $OUT_DIR
+for n in $(seq 1 $#); do
+  processContract $1 $OUT_DIR
+  shift
 done
 
 # Remove build artifacts.
 echo "> [2 / 2] Cleaning up ..."
 rm -rf $OUT_DIR
+rm -rf ../contracts/__pycache__
+rm -rf ../contracts/utils/__pycache__
+
 echo "> Removed artifacts."
 echo ""
 
