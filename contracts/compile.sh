@@ -10,7 +10,7 @@ echo "----------------------------------------"
 SMART_PY_CLI=~/smartpy-cli/SmartPy.sh
 
 # Build artifact directory.
-OUT_DIR=./.tmp_contract_build
+OUT_DIR=../build/.tmp_contract_build
 
 # Array of SmartPy files to compile.
 CONTRACTS_ARRAY=(demo)
@@ -23,7 +23,7 @@ fi
 function processContract {
     CONTRACT_NAME=$1
     OUT_DIR=$2
-    CONTRACT_IN="../contracts/${CONTRACT_NAME}.py"
+    CONTRACT_IN="./${CONTRACT_NAME}.py"
     CONTRACT_OUT="${CONTRACT_NAME}.json"
     CONTRACT_COMPILED="${CONTRACT_NAME}/step_000_cont_0_contract.json"
 
@@ -35,10 +35,10 @@ function processContract {
     fi
 
     echo ">>> [1 / 3] Testing ${CONTRACT_NAME} ... "
-    $SMART_PY_CLI test $CONTRACT_IN $OUT_DIR
+    # $SMART_PY_CLI test $CONTRACT_IN $OUT_DIR
 
     echo ">>> [2 / 3] Compiling ${CONTRACT_NAME} ..."
-    $SMART_PY_CLI compile $CONTRACT_IN $OUT_DIR
+    $SMART_PY_CLI compile $CONTRACT_IN $OUT_DIR --html
 
     echo ">>> [3 / 3] Extracting Michelson contract ... "
     cp $OUT_DIR/$CONTRACT_COMPILED $CONTRACT_OUT
@@ -58,7 +58,7 @@ done
 
 # Remove build artifacts.
 echo "> [2 / 2] Cleaning up ..."
-rm -rf $OUT_DIR
+# rm -rf $OUT_DIR
 rm -rf ../contracts/__pycache__
 rm -rf ../contracts/utils/__pycache__
 
