@@ -1,7 +1,5 @@
 import smartpy as sp
 
-Constants =  sp.io.import_script_from_url("file:./utils/constants.py")
-Errors = sp.io.import_script_from_url("file:./utils/errors.py")
 
 class FA2ErrorMessage:
     """Static enum used for the FA2 related errors, using the `FA2_` prefix"""
@@ -10,6 +8,8 @@ class FA2ErrorMessage:
     """This error is thrown if the token id used in to defined"""
     INSUFFICIENT_BALANCE = "{}INSUFFICIENT_BALANCE".format(PREFIX)
     """This error is thrown if the source address transfers an amount that exceeds its balance"""
+    NOT_ADMIN = "{}NOT_ADMIN".format(PREFIX)
+    """This error is thrown if the source address is not the administrator"""
     NOT_OWNER = "{}NOT_OWNER".format(PREFIX)
     """This error is thrown if not the owner is performing an action that he/she shouldn't"""
     NOT_OPERATOR = "{}NOT_OPERATOR".format(PREFIX)
@@ -206,7 +206,8 @@ class BaseFA2(sp.Contract):
             token_metadata=sp.big_map(
                 tkey=sp.TNat, tvalue=TokenMetadata.get_type()),
             total_supply=sp.big_map(tkey=sp.TNat, tvalue=sp.TNat),
-            operators=sp.big_map(tkey=OperatorKey.get_type(), tvalue=sp.TUnit)
+            operators=sp.big_map(tkey=OperatorKey.get_type(), tvalue=sp.TUnit),
+            token_id_set = TokenIdSet.new()
         )
 
     def __init__(self):
@@ -288,68 +289,42 @@ class BaseFA2(sp.Contract):
 
         sp.transfer(responses.value, sp.mutez(0), balance_of_request.callback)
 
-class AdministrableMixin():
-    """Mixin used to compose andministrable functionality of a contract. Still requires the inerhiting contract to define the apropiate storage.
+class AdministrableMixin(): 
+    """Mixin used to compose andministrable functionality of a contract. Still requires the inerhiting contract to define the appropiate storage.
     """
 
     @sp.sub_entry_point
-    def verify_is_admin(self, token_id):
-        """Sub entrypoint which verifies if a sender is in the set of admins
-        Pre: storage.administrators.contains(LedgerKey(sp.sender, token_id))
-        Args:
-            token_id (sp.nat): token id to check for admin
+    def verify_is_admin(self):
         """
-        administrator_ledger_key = LedgerKey.make(token_id, sp.sender)
-        sp.verify(self.data.administrators.contains(administrator_ledger_key), message=Errors.NOT_ADMIN)
+        Sub entrypoint which verifies if a sender is the administrator
+        """
+        sp.verify(sp.sender == self.data.administrator, message=FA2ErrorMessage.NOT_ADMIN)
 
     @sp.entry_point
-    def set_administrator(self, token_id, administrator_to_set):
-        """Only an existing admin can call this entrypoint. If the sender is correct the new admin is set
-        Pre: verify_is_admin(token_id)
-        Post: storage.administrators[LedgerKey(administrator_to_set, token_id)] = sp.unit
+    def set_administrator(self, administrator_to_set):
+        """
+        Only an existing administrator can call this entrypoint. 
+        If the sender is correct, a new administrator is set for the contract.
         Args:
-            token_id (sp.nat): token id
             administrator_to_set (sp.address): the administrator that should be set
         """
-        sp.set_type(token_id, sp.TNat)
         sp.set_type(administrator_to_set, sp.TAddress)
-        self.verify_is_admin(token_id)
+        self.verify_is_admin()
+        self.data.administrator = administrator_to_set
 
-        administrator_ledger_key = LedgerKey.make(token_id, administrator_to_set)
-        self.data.administrators[administrator_ledger_key] = sp.unit
+class TokenIdSet: 
+    def new():
+        return sp.set(t=sp.TNat)
+    
+    def contains(set, token_id):
+        return set.contains(token_id)
+    
+    def add(set, token_id):
+        set.add(token_id)
 
-    @sp.entry_point
-    def remove_administrator(self, token_id, administrator_to_remove):
-        """Only an existing admin can call this entrypoint. This removes a administrator entry entirely from the map (even the executing admin if requested)
-        Pre: verify_is_admin(token_id)
-        Post: del storage.administrators[LedgerKey(administrator_to_set, token_id)]
-        Args:
-            token_id (sp.nat): token id
-            administrator_to_remove (sp.address): the administrator that should be removed
-        """
-        sp.set_type(token_id, sp.TNat)
-        sp.set_type(administrator_to_remove, sp.TAddress)
-        self.verify_is_admin(token_id)
-
-        administrator_to_remove_key = LedgerKey.make(
-            token_id, administrator_to_remove)
-        del self.data.administrators[administrator_to_remove_key]
-
-    @sp.entry_point
-    def execute(self, execution_payload):
-        """Only an admin for token_id 0 can call this entrypoint. It executes in the name of the contract the lambda stored in the execution payload.
-        This is used for upgreadability/migrations.
-        Pre: verify_is_admin(0)
-        Post: push execution_payload on execution stack
-        Args:
-            execution_payload (sp.TLambda(sp.TUnit, sp.TList(sp.TOperation))): the lambda to execute
-        """
-        sp.set_type(execution_payload, sp.TLambda(sp.TUnit, sp.TList(sp.TOperation)))
-        self.verify_is_admin(Constants.DEFAULT_TOKEN_ID)
-        sp.add_operations(execution_payload(sp.unit).rev())
 
 class AdministrableFA2(BaseFA2, AdministrableMixin):
-    """FA2 Contract with administrators per token"""
+    """FA2 Contract with a single administrator"""
 
     def get_init_storage(self):
         """Returns the initial storage of the contract used for inheritance of smartpy contracts
@@ -357,36 +332,17 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
             dict: initial storage of the contract
         """
         storage = super().get_init_storage()
-        storage['administrators'] = sp.big_map(l=self.administrators,
-            tkey=LedgerKey.get_type(), tvalue=sp.TUnit)
+        storage['administrator'] = self.administrator
         return storage
 
-    def __init__(self, administrators={}):
-        """The storage can be initialised with a list of administrators
+    def __init__(self, administrator):
+        """The storage can be initialised with an administrator.
         Args:
-            administrators (dict, optional): the initial list of administrator to allow. Defaults to {}.
+            administrator (sp.address): the administrator of the contract.
         """
-        self.administrators = administrators
+        self.administrator = administrator
         self.add_flag("initial-cast")
         super().__init__()
-
-    @sp.entry_point
-    def set_token_metadata(self, token_metadata):
-        """Only an admin for token id 0 can call this entrypoint. It will set the token_metadata of the token if it was not already previously set and also set the sender as the admin.
-        Pre: verify_is_admin(0)
-        Post: storage.token_metadata[token_metadata.id] = token_metadata
-        Post: storage.administrator[LedgerKey(sp.sender, token_metadata.id)] = sp.unit
-        Post: storage.total_supply[token_metadata.id] = 0
-        Args:
-            token_metadata (TokenMetadata): the token metadata to set
-        """
-        sp.set_type(token_metadata, TokenMetadata.get_type())
-
-        self.verify_is_admin(Constants.DEFAULT_TOKEN_ID)
-        with sp.if_(~self.data.token_metadata.contains(token_metadata.token_id)):
-            self.data.token_metadata[token_metadata.token_id] = token_metadata
-            self.data.administrators[LedgerKey.make(token_metadata.token_id, sp.sender)] = sp.unit
-            self.data.total_supply[token_metadata.token_id] = 0
 
     @sp.entry_point
     def mint(self, recipient_token_amount):
@@ -397,12 +353,13 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
         Args:
             recipient_token_amount (RecipientTokenAmount): a record that has owner, token_amount and token_id
         """
+
         sp.set_type(recipient_token_amount, RecipientTokenAmount.get_type())
-        self.verify_is_admin(recipient_token_amount.token_id)
+        self.verify_is_admin()
         owner_ledger_key = LedgerKey.make(recipient_token_amount.token_id, recipient_token_amount.owner)
         self.data.ledger[owner_ledger_key] = self.data.ledger.get(
             owner_ledger_key, 0) + recipient_token_amount.token_amount
-        self.data.total_supply[recipient_token_amount.token_id] +=  recipient_token_amount.token_amount
+
 
     @sp.entry_point
     def burn(self, recipient_token_amount):
@@ -415,10 +372,18 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
             recipient_token_amount (RecipientTokenAmount): a record that has owner, token_amount and token_id
         """
         sp.set_type(recipient_token_amount, RecipientTokenAmount.get_type())
-        self.verify_is_admin(recipient_token_amount.token_id)
+        self.verify_is_admin()
         owner_ledger_key = LedgerKey.make(recipient_token_amount.token_id, recipient_token_amount.owner)
         self.data.ledger[owner_ledger_key] = sp.as_nat(
             self.data.ledger.get(owner_ledger_key, 0) - recipient_token_amount.token_amount)
         self.data.total_supply[recipient_token_amount.token_id] =  sp.as_nat(self.data.total_supply[recipient_token_amount.token_id]-recipient_token_amount.token_amount)
         with sp.if_(self.data.ledger.get(owner_ledger_key, sp.nat(0)) == sp.nat(0)):
             del self.data.ledger[owner_ledger_key]
+
+
+    @sp.add_test(name="FA2")
+    def test():
+        pass
+
+sp.add_compilation_target("fa2", AdministrableFA2(sp.address("tz1VQnqCCqX4K5sP3FNkVSNKTdCAMJDd3E1n")))
+
