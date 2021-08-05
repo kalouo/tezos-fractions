@@ -380,10 +380,3 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
         with sp.if_(self.data.ledger.get(owner_ledger_key, sp.nat(0)) == sp.nat(0)):
             del self.data.ledger[owner_ledger_key]
 
-
-    @sp.add_test(name="FA2")
-    def test():
-        pass
-
-sp.add_compilation_target("fa2", AdministrableFA2(sp.address("tz1VQnqCCqX4K5sP3FNkVSNKTdCAMJDd3E1n")))
-
