@@ -1,6 +1,7 @@
 import smartpy as sp
 
-FA2 = sp.io.import_script_from_url("file:./FA2.py")
+from contracts.utils import Utils
+
 
 class Vault(sp.Contract):
     def __init__(self):
@@ -11,11 +12,8 @@ class Vault(sp.Contract):
         sp.set_type(asset_contract_address, sp.TAddress)
         sp.set_type(asset_token_id, sp.TNat)
 
-        transfer_token_contract = sp.contract(FA2.Transfer.get_batch_type(
-        ), asset_contract_address, entry_point="transfer").open_some()
-        transfer_payload = [FA2.Transfer.item(sp.sender, [sp.record(
-            to_=self.address, token_id=asset_token_id, amount=sp.nat(1))])]
-        sp.transfer(transfer_payload, sp.mutez(0), transfer_token_contract)
+        Utils.execute_token_transfer(
+            asset_contract_address, sp.sender, sp.self_address, asset_token_id, sp.nat(1))
 
 
 @sp.add_test(name="Vault")
