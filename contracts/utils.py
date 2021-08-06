@@ -1,6 +1,6 @@
 import smartpy as sp
 
-FA2 = sp.io.import_script_from_url("file:./FA2.py")
+import contracts.FA2 as FA2 
 
 Addresses = {
     "ADMIN": sp.address("tz1VQnqCCqX4K5sP3FNkVSNKTdCAMJDd3E1n"),

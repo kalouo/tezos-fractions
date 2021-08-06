@@ -10,7 +10,7 @@ echo "----------------------------------------"
 SMART_PY_CLI=~/smartpy-cli/SmartPy.sh
 
 # Build artifact directory.
-OUT_DIR=../build/.tmp_contract_build
+OUT_DIR=./build/.tmp_contract_build
 
 # Array of SmartPy files to compile.
 CONTRACTS_ARRAY=(demo)
@@ -23,7 +23,7 @@ fi
 function processContract {
     CONTRACT_NAME=$1
     OUT_DIR=$2
-    CONTRACT_IN="../contracts/${CONTRACT_NAME}.py"
+    CONTRACT_IN="./contracts/${CONTRACT_NAME}.py"
     CONTRACT_OUT="${CONTRACT_NAME}.json"
     CONTRACT_COMPILED="${CONTRACT_NAME}/step_000_cont_0_contract.json"
 
@@ -41,10 +41,12 @@ function processContract {
     $SMART_PY_CLI compile $CONTRACT_IN $OUT_DIR --html
 
     echo ">>> [3 / 3] Extracting Michelson contract ... "
-    cp $OUT_DIR/$CONTRACT_COMPILED ../build/$CONTRACT_OUT
+    cp $OUT_DIR/$CONTRACT_COMPILED ./build/$CONTRACT_OUT
     echo ">>> Michelson contract written to ${CONTRACT_OUT}"
 }
 
+export PYTHONPATH=$PWD
+  
 echo "> [1 / 2] Unit Testing and Compiling Contracts."
 #   for i in ${!CONTRACTS_ARRAY[@]}; do
 #       processContract ${CONTRACTS_ARRAY[$i]} $OUT_DIR
