@@ -35,7 +35,7 @@ function processContract {
     fi
 
     echo ">>> [1 / 3] Testing ${CONTRACT_NAME} ... "
-    $SMART_PY_CLI test $CONTRACT_IN $OUT_DIR
+    $SMART_PY_CLI test $CONTRACT_IN $OUT_DIR --html
 
     echo ">>> [2 / 3] Compiling ${CONTRACT_NAME} ..."
     $SMART_PY_CLI compile $CONTRACT_IN $OUT_DIR --html
@@ -61,8 +61,9 @@ done
 # Remove build artifacts.
 echo "> [2 / 2] Cleaning up ..."
 rm -rf $OUT_DIR
-rm -rf ../contracts/__pycache__
-rm -rf ../contracts/utils/__pycache__
+rm -rf ./contracts/__pycache__
+rm -rf ./__pycache__
+
 
 echo "> Removed artifacts."
 echo ""
