@@ -15,6 +15,7 @@ class FA2ErrorMessage:
     NOT_OPERATOR = "{}NOT_OPERATOR".format(PREFIX)
     """This error is thrown if neither token owner nor permitted operators are trying to transfer an amount"""
 
+
 class TokenMetadata:
     """Token metadata object as per FA2 standard"""
     def get_type():
@@ -30,6 +31,7 @@ class TokenMetadata:
             sp.TList: smartpy type of a list of tokenmetadata
         """
         return sp.TList(TokenMetadata.get_type())
+
 
 class Transfer:
     """Transfer object as per FA2 standard"""
@@ -65,6 +67,7 @@ class Transfer:
         """
         return sp.set_type_expr(sp.record(from_=from_, txs=txs), Transfer.get_type())
 
+
 class UpdateOperator():
     """Update operators object as per FA2 standard"""
     def get_operator_param_type():
@@ -93,6 +96,7 @@ class UpdateOperator():
             sp.TList: list type containing update operator types
         """
         return sp.TList(UpdateOperator.get_type())
+
 
 class BalanceOf:
     """Balance of object as per FA2 standard"""
@@ -126,6 +130,7 @@ class BalanceOf:
         """
         return sp.set_type_expr(sp.record(requests=[ledger_key], callback=callback), BalanceOf.get_type())
 
+
 class LedgerKey:
     """Ledger key used when looking up balances"""
     def get_type():
@@ -144,6 +149,7 @@ class LedgerKey:
             sp.record: typed ledger key
         """
         return sp.set_type_expr(sp.record(owner=owner, token_id=token_id), LedgerKey.get_type())
+
 
 class OperatorKey:
     """Operator key used when looking up operation permissions"""
@@ -164,6 +170,7 @@ class OperatorKey:
             sp.record: typed operator key
         """
         return sp.set_type_expr(sp.record(token_id=token_id, owner=owner, operator=operator), OperatorKey.get_type())
+
 
 class RecipientTokenAmount:
     """Helper type used whenever amount, recipient and token id needs to be defined
@@ -193,6 +200,7 @@ class RecipientTokenAmount:
         """
         return sp.set_type_expr(sp.record(owner=owner, token_id=token_id, token_amount=token_amount), RecipientTokenAmount.get_type())
 
+
 class BaseFA2(sp.Contract):
     """Base FA2 contract, which implements the required entry points"""
 
@@ -207,7 +215,7 @@ class BaseFA2(sp.Contract):
                 tkey=sp.TNat, tvalue=TokenMetadata.get_type()),
             total_supply=sp.big_map(tkey=sp.TNat, tvalue=sp.TNat),
             operators=sp.big_map(tkey=OperatorKey.get_type(), tvalue=sp.TUnit),
-            token_id_set = TokenIdSet.new()
+            token_id_set=TokenIdSet.new()
         )
 
     def __init__(self):
@@ -228,21 +236,24 @@ class BaseFA2(sp.Contract):
         sp.set_type(transfers, Transfer.get_batch_type())
         with sp.for_('transfer', transfers) as transfer:
             with sp.for_('tx', transfer.txs) as tx:
-                from_user_ledger_key = sp.local("from_user_ledger_key", LedgerKey.make(tx.token_id, transfer.from_))
-                to_user_ledger_key = sp.local("to_user_ledger_key", LedgerKey.make(tx.token_id, tx.to_))
-                operator_key = OperatorKey.make(tx.token_id, transfer.from_, sp.sender)
+                from_user_ledger_key = sp.local(
+                    "from_user_ledger_key", LedgerKey.make(tx.token_id, transfer.from_))
+                to_user_ledger_key = sp.local(
+                    "to_user_ledger_key", LedgerKey.make(tx.token_id, tx.to_))
+                operator_key = OperatorKey.make(
+                    tx.token_id, transfer.from_, sp.sender)
 
                 sp.verify(self.data.ledger.get(from_user_ledger_key.value, sp.nat(0))
-                        >= tx.amount, message=FA2ErrorMessage.INSUFFICIENT_BALANCE)
+                          >= tx.amount, message=FA2ErrorMessage.INSUFFICIENT_BALANCE)
                 sp.verify((sp.sender == transfer.from_) | self.data.operators.contains(
                     operator_key), message=FA2ErrorMessage.NOT_OWNER)
-                with sp.if_(tx.amount>0):
+                with sp.if_(tx.amount > 0):
                     self.data.ledger[from_user_ledger_key.value] = sp.as_nat(
                         self.data.ledger[from_user_ledger_key.value] - tx.amount)
                     self.data.ledger[to_user_ledger_key.value] = self.data.ledger.get(
                         to_user_ledger_key.value, 0) + tx.amount
 
-                    with sp.if_(self.data.ledger[from_user_ledger_key.value]==sp.nat(0)):
+                    with sp.if_(self.data.ledger[from_user_ledger_key.value] == sp.nat(0)):
                         del self.data.ledger[from_user_ledger_key.value]
 
     @sp.entry_point
@@ -289,7 +300,8 @@ class BaseFA2(sp.Contract):
 
         sp.transfer(responses.value, sp.mutez(0), balance_of_request.callback)
 
-class AdministrableMixin(): 
+
+class AdministrableMixin():
     """Mixin used to compose andministrable functionality of a contract. Still requires the inerhiting contract to define the appropiate storage.
     """
 
@@ -298,7 +310,8 @@ class AdministrableMixin():
         """
         Sub entrypoint which verifies if a sender is the administrator
         """
-        sp.verify(sp.sender == self.data.administrator, message=FA2ErrorMessage.NOT_ADMIN)
+        sp.verify(sp.sender == self.data.administrator,
+                  message=FA2ErrorMessage.NOT_ADMIN)
 
     @sp.entry_point
     def set_administrator(self, administrator_to_set):
@@ -312,13 +325,14 @@ class AdministrableMixin():
         self.verify_is_admin()
         self.data.administrator = administrator_to_set
 
-class TokenIdSet: 
+
+class TokenIdSet:
     def new():
         return sp.set(t=sp.TNat)
-    
+
     def contains(set, token_id):
         return set.contains(token_id)
-    
+
     def add(set, token_id):
         set.add(token_id)
 
@@ -356,13 +370,13 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
 
         sp.set_type(recipient_token_amount, RecipientTokenAmount.get_type())
         self.verify_is_admin()
-        owner_ledger_key = LedgerKey.make(recipient_token_amount.token_id, recipient_token_amount.owner)
+        owner_ledger_key = LedgerKey.make(
+            recipient_token_amount.token_id, recipient_token_amount.owner)
         self.data.ledger[owner_ledger_key] = self.data.ledger.get(
             owner_ledger_key, 0) + recipient_token_amount.token_amount
 
-
     @sp.entry_point
-    def burn(self, recipient_token_amount):
+    def burn(self, params):
         """Allows to mint new tokens to the specified reciepient address, only a token administrator can do this
         Pre: verify_is_admin(recipient_token_amount.token_id)
         Pre: storage.ledger[LedgerKey(recipient_token_amount.owner, recipient_token_amount.token_id)] >= recipient_token_amount.token_amount
@@ -371,12 +385,16 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
         Args:
             recipient_token_amount (RecipientTokenAmount): a record that has owner, token_amount and token_id
         """
-        sp.set_type(recipient_token_amount, RecipientTokenAmount.get_type())
+        sp.set_type(params, RecipientTokenAmount.get_type())
         self.verify_is_admin()
-        owner_ledger_key = LedgerKey.make(recipient_token_amount.token_id, recipient_token_amount.owner)
+        owner_ledger_key = LedgerKey.make(params.token_id, params.owner)
+
+        sp.verify(self.data.ledger.get(owner_ledger_key, 0) >= params.token_amount, message=FA2ErrorMessage.INSUFFICIENT_BALANCE)
+        # sp.verify(self.data.ledger.get(owner_ledger_key, sp.nat(0) >= params.token_amount, message=FA2ErrorMessage.INSUFFICIENT_BALANCE))
+
         self.data.ledger[owner_ledger_key] = sp.as_nat(
-            self.data.ledger.get(owner_ledger_key, 0) - recipient_token_amount.token_amount)
-        self.data.total_supply[recipient_token_amount.token_id] =  sp.as_nat(self.data.total_supply[recipient_token_amount.token_id]-recipient_token_amount.token_amount)
+            self.data.ledger.get(owner_ledger_key, 0) - params.token_amount)
+        # self.data.total_supply[recipient_token_amount.token_id] = sp.as_nat(
+        #     self.data.total_supply[recipient_token_amount.token_id]-recipient_token_amount.token_amount)
         with sp.if_(self.data.ledger.get(owner_ledger_key, sp.nat(0)) == sp.nat(0)):
             del self.data.ledger[owner_ledger_key]
-
