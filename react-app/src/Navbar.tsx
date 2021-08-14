@@ -1,10 +1,7 @@
-import { useEffect } from "react";
 import styled from "styled-components";
-import colors from "./colors";
-import { TezosToolkit } from "@taquito/taquito";
-import { BeaconWallet } from "@taquito/beacon-wallet";
-import { useWallet } from "./hooks/useWallet";
 import truncateMiddle from "truncate-middle";
+import colors from "./colors";
+import { useWallet } from "./hooks/useWallet";
 
 const Container = styled.div`
   background-color: ${colors.BLACK};
@@ -34,14 +31,6 @@ const Container = styled.div`
 `;
 
 const Navbar = () => {
-  // const {
-  //   initialized,
-  //   address,
-  //   error: walletError,
-  //   loading: walletLoading,
-  //   connect: connect,
-  // } = useBeaconWallet();
-
   const { initialized, address, error, connect, disconnect } = useWallet();
 
   return (
@@ -52,7 +41,9 @@ const Navbar = () => {
           className="provider-button"
           onClick={() => (initialized ? disconnect() : connect())}
         >
-          {initialized ? `ꜩ ${truncateMiddle(address, 5, 5, " ... ")}` : "CONNECT"}
+          {initialized
+            ? `ꜩ ${truncateMiddle(address, 5, 5, " ... ")}`
+            : "CONNECT"}
         </div>
       </div>
     </Container>
