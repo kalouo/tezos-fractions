@@ -1,7 +1,7 @@
-import styled from "styled-components";
-import truncateMiddle from "truncate-middle";
-import colors from "./colors";
-import { useWallet } from "./hooks/useWallet";
+import styled from 'styled-components';
+import truncateMiddle from 'truncate-middle';
+import colors from './utils/colors';
+import { useWallet } from './hooks/useWallet';
 
 const Container = styled.div`
   background-color: ${colors.BLACK};
@@ -20,7 +20,6 @@ const Container = styled.div`
   }
   .provider-button {
     color: ${colors.WHITE};
-    border-color: ${colors.WHITE};
     border: 1px solid ${colors.WHITE};
     padding: 7.5px;
     cursor: pointer;
@@ -31,19 +30,16 @@ const Container = styled.div`
 `;
 
 const Navbar = () => {
-  const { initialized, address, error, connect, disconnect } = useWallet();
+  const {
+    initialized, address, connect, disconnect,
+  } = useWallet();
 
   return (
     <Container>
       <div className="inner-container">
         <div className="title">FRAGMENTS</div>
-        <div
-          className="provider-button"
-          onClick={() => (initialized ? disconnect() : connect())}
-        >
-          {initialized
-            ? `ꜩ ${truncateMiddle(address, 5, 5, " ... ")}`
-            : "CONNECT"}
+        <div className="provider-button" onClick={() => (initialized ? disconnect() : connect())}>
+          {initialized ? `ꜩ ${truncateMiddle(address, 5, 5, ' ... ')}` : 'CONNECT'}
         </div>
       </div>
     </Container>

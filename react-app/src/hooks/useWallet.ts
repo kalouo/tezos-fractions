@@ -1,25 +1,26 @@
-import { useState } from "react";
-import { useTezosContext } from "context/tezos";
+import { useState } from 'react';
+import { useTezosContext } from 'contexts/tezos';
+import { NetworkType } from '@airgap/beacon-sdk';
+import { notifyError } from 'utils/notifier';
 
 export function useWallet() {
   const { wallet } = useTezosContext();
 
   const [initialized, setInitialized] = useState(false);
-  const [address, setAddress] = useState("");
-  const [error, setError] = useState("");
+  const [address, setAddress] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
-
-  return { initialized, address, error, loading, connect, disconnect };
 
   async function connect() {
     setLoading(true);
     if (wallet) {
       try {
-        const { address } = await wallet.client.requestPermissions();
+        const response = await wallet.client.requestPermissions({
+          network: { type: NetworkType.FLORENCENET },
+        });
         setInitialized(true);
-        setAddress(address);
+        setAddress(response.address);
       } catch (error) {
-        setError(error.message);
+        notifyError('ERROR', 'Could not connect to wallet.');
       } finally {
         setLoading(false);
       }
@@ -32,10 +33,17 @@ export function useWallet() {
       try {
         await wallet.clearActiveAccount();
         setInitialized(false);
-        setAddress("");
+        setAddress('');
       } catch (error) {
-        setError(error.message);
+        notifyError('ERROR', 'Could not disconnect wallet.');
       }
     }
   }
+  return {
+    initialized,
+    address,
+    loading,
+    connect,
+    disconnect,
+  };
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint --ext=.js,.jsx,.ts,.tsx .",
     "compile-contracts": "chmod +x compile.sh && ./compile.sh",
-    "deploy-contracts": "ts-node contracts/deploy.ts"
+    "deploy-contracts": "ts-node deployment/deploy.ts"
   },
   "author": "",
   "license": "ISC",

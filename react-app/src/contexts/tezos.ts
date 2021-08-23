@@ -1,6 +1,6 @@
-import { createContext, useContext } from "react";
-import { TezosToolkit } from "@taquito/taquito";
-import { BeaconWallet } from "@taquito/beacon-wallet";
+import { createContext, useContext } from 'react';
+import { TezosToolkit } from '@taquito/taquito';
+import { BeaconWallet } from '@taquito/beacon-wallet';
 
 interface State {
   tezos?: TezosToolkit;

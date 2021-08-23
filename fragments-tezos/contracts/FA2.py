@@ -398,3 +398,7 @@ class AdministrableFA2(BaseFA2, AdministrableMixin):
         #     self.data.total_supply[recipient_token_amount.token_id]-recipient_token_amount.token_amount)
         with sp.if_(self.data.ledger.get(owner_ledger_key, sp.nat(0)) == sp.nat(0)):
             del self.data.ledger[owner_ledger_key]
+
+
+sp.add_compilation_target("AdministrableFA2", AdministrableFA2(
+    sp.address("tz1eeR22tmjPN3rGDikEMvpe8jcdXww3dqTt")))

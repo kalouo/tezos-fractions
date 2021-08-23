@@ -43,10 +43,9 @@ class Manager(sp.Contract):
         self.init(**self.get_initial_storage(fractions_contract))
 
     @sp.entry_point
-    def create_vault(self, asset_contract, asset_token_id, contract_address_callback):
+    def create_vault(self, asset_contract, asset_token_id):
         sp.set_type(asset_contract, sp.TAddress)
         sp.set_type(asset_token_id, sp.TNat)
-        sp.set_type(contract_address_callback, sp.TContract(sp.TAddress))
 
         lookup_key = LookupKey.make(asset_contract, asset_token_id)
         sp.verify(self.data.vault_lookup_by_underlying.contains(
@@ -56,8 +55,6 @@ class Manager(sp.Contract):
 
         self.data.vault_lookup_by_underlying[lookup_key] = vault_contract_address
 
-        sp.transfer(vault_contract_address, sp.mutez(0),
-                    contract_address_callback)
 
     @sp.entry_point
     def deposit_and_fractionalise(self, asset_contract_address, asset_token_id, supply):
@@ -188,9 +185,7 @@ class Manager(sp.Contract):
                                          contract_address_callback=return_contract).run(sender=alice.address, valid=False, exception=ErrorMessage.EXISTING_VAULT)
 
         lookup_key = LookupKey.make(token.address, token_id)
-        vault_address = viewer.data.address
-        scenario.verify(
-            manager.data.vault_lookup_by_underlying[lookup_key] == vault_address)
+        vault_address =  manager.data.vault_lookup_by_underlying[lookup_key]
 
         # Alice deposits in the Vault.
         scenario += token.update_operators([sp.variant("add_operator", sp.record(
@@ -227,4 +222,4 @@ class Manager(sp.Contract):
         scenario.verify(fractions.data.ledger.contains(FA2.LedgerKey.make(0, alice.address)) == False)
 
 sp.add_compilation_target("manager", Manager(
-    sp.address("KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn")))
+    sp.address("tz1eeR22tmjPN3rGDikEMvpe8jcdXww3dqTt")))
