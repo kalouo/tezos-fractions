@@ -60,9 +60,9 @@ export const useManager = () => {
   async function getVaultByUnderlying(
     storage: { [key: string]: any },
     assetContractAddress: string,
-    assetTokenId: string
+    assetTokenId: string,
   ) {
-    return storage[`vault_lookup_by_underlying`].get({
+    return storage.vault_lookup_by_underlying.get({
       contract_address: assetContractAddress,
       token_id: assetTokenId,
     });

@@ -1,7 +1,9 @@
 import styled from 'styled-components';
 import truncateMiddle from 'truncate-middle';
-import colors from './utils/colors';
-import { useWallet } from './hooks/useWallet';
+import { Button } from '@material-ui/core';
+import { NavLink } from 'react-router-dom';
+import colors from '../utils/colors';
+import { useWallet } from '../hooks/useWallet';
 
 const Container = styled.div`
   background-color: ${colors.BLACK};
@@ -38,6 +40,9 @@ const Navbar = () => {
     <Container>
       <div className="inner-container">
         <div className="title">FRAGMENTS</div>
+        <div className="menu">
+          <NavLink to="create">CREATE</NavLink>
+        </div>
         <div className="provider-button" onClick={() => (initialized ? disconnect() : connect())}>
           {initialized ? `ꜩ ${truncateMiddle(address, 5, 5, ' ... ')}` : 'CONNECT'}
         </div>

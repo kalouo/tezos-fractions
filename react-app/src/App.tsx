@@ -4,7 +4,7 @@ import { BeaconWallet } from '@taquito/beacon-wallet';
 import { NetworkType } from '@airgap/beacon-sdk';
 import ReactNotification from 'react-notifications-component';
 import 'react-notifications-component/dist/theme.css';
-import Router from "./Router"
+import Router from './Router';
 
 export default function App() {
   const tezos = new TezosToolkit('https://florencenet.smartpy.io');
